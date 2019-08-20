@@ -5,6 +5,7 @@ const server = express();
 server.use(express.json());
 
 const projects = [];
+let requests = 0;
 
 const getProjectIndex = id => {
   let i = 0;
@@ -16,6 +17,13 @@ const getProjectIndex = id => {
   }
   return null;
 };
+const countRequests = (req, res, next) => {
+  requests++;
+  console.log(requests);
+  next();
+};
+
+server.use(countRequests);
 
 const checkProjectExists = (req, res, next) => {
   const { id } = req.params;
