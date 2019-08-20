@@ -5,16 +5,18 @@ const server = express();
 server.use(express.json());
 
 const projects = [];
+
 const getProjectIndex = id => {
   let i = 0;
   for (project of projects) {
-    if (project.id === id) {
+    if (project.id == id) {
       return i;
     }
     i++;
   }
   return null;
 };
+
 const checkProjectExists = (req, res, next) => {
   const { id } = req.params;
   if (!getProjectIndex(id)) {
@@ -23,13 +25,21 @@ const checkProjectExists = (req, res, next) => {
   return next();
 };
 
+const checkTaskTitleExists = (req, res, next) => {
+  const { title } = req.body;
+  if (title) {
+    return next();
+  }
+  return res.status(400).json({ error: "Task title is required." });
+};
+
 server.get("/projects", (req, res) => {
   return res.json(projects);
 });
 
 server.post("/projects", (req, res) => {
   const { id, title } = req.body;
-  projects.push({ id, title });
+  projects.push({ id, title, tasks: [] });
 
   return res.json(projects);
 });
@@ -47,5 +57,19 @@ server.delete("/projects/:id", checkProjectExists, (req, res) => {
   projects.splice(getProjectIndex(id), 1);
   return res.send();
 });
+
+server.post(
+  "/projects/:id/tasks",
+  checkProjectExists,
+  checkTaskTitleExists,
+  (req, res) => {
+    const { id } = req.params;
+    const { title } = req.body;
+
+    const project = projects[getProjectIndex(id)];
+    project.tasks.push({ title });
+    return res.json(projects[getProjectIndex(id)]);
+  }
+);
 
 server.listen(3000);
